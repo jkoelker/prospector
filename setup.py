@@ -14,11 +14,13 @@ setup(name='prospector',
       author_email='jason@pickaxehosting.com',
       url='',
       license='',
-      packages=find_packages(exclude=['ez_setup', 'examples', 'tests']),
+      packages=find_packages(exclude=['ez_setup', 'examples', 'tests']) + \
+               ['twisted.plugins'],
+      package_data = {'twisted': 'plugins/prospector_plugin.py'],},
       include_package_data=True,
       zip_safe=False,
       install_requires=[
-          # -*- Extra requirements: -*-
+            'twisted'
       ],
       entry_points="""
       # -*- Entry points: -*-
