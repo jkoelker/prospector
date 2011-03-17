@@ -16,7 +16,7 @@ setup(name='prospector',
       license='',
       packages=find_packages(exclude=['ez_setup', 'examples', 'tests']) + \
                ['twisted.plugins'],
-      package_data = {'twisted': 'plugins/prospector_plugin.py'],},
+      package_data = {'twisted': ['plugins/prospector_plugin.py'],},
       include_package_data=True,
       zip_safe=False,
       install_requires=[
@@ -26,3 +26,8 @@ setup(name='prospector',
       # -*- Entry points: -*-
       """,
       )
+try:
+    from twisted.plugin import getPlugins, IPlugin
+    list(getPlugins(IPlugin))
+except:
+    pass

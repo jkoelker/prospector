@@ -7,7 +7,6 @@ from twisted.application.service import IServiceMaker
 from twisted.application import internet, service, strports
 
 from twisted.cred import checkers, portal
-from twisted.conch.manhole import ColoredManhole
 from twisted.conch.manhole_ssh import ConchFactory, TerminalRealm
 from twisted.conch.manhole_tap import chainedProtocolFactory
 
@@ -26,6 +25,8 @@ class ProspectorServiceMaker(object):
         svc = service.MultiService()
 
         checker = checkers.InMemoryUsernamePasswordDatabaseDontUse(**creds)
+
+        namespace = {}
 
         sshRealm = TerminalRealm()
         sshRealm.chainedProtocolFactory = chainedProtocolFactory(namespace)
