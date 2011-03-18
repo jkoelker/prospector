@@ -1,7 +1,10 @@
+from twisted.conch.error import ConchError
 from twisted.conch.ssh import transport, userauth, connection
 from twisted.conch.ssh import common, channel
 from twisted.conch.ssh.keys import Key
 from twisted.internet import defer, reactor, protocol
+
+import struct
 
 class Transport(transport.SSHClientTransport):
     def __init__(self, deferConnectionSecure):
@@ -32,13 +35,31 @@ class CommandConnection(connection.SSHConnection):
 class CommandChannel(channel.SSHChannel):
     name = "session"
 
-    def __init__(self, command, deferStdOut, deferStdErr, *args, **kwargs):
+    def __init__(self, command, result, *args, **kwargs):
+        """
+        @param command: command to run
+        @type command: string
+        @param result: deferred to callback (exit, stdout, stderr)
+                       or errback (code, value) with
+        @type result: Deferred
+        @param conn: connection to create the channel on
+        @type conn: Twisted connection object
+        """
         channel.SSHChannel.__init__(self, *args, **kwargs)
         self.command = command
-        self.deferStdOut = deferStdOut
-        self.deferStdErr = deferStdErr
+        self.result = result
         self.out = ''
         self.err = ''
+        self.exit = 1
+
+    def openFailed(self, reason):
+        if isinstance(reason, ConchError):
+            res  = (reason.data, reason.value)
+        else:
+            res = (reason.code, reason.desc)
+
+        result.errback(res)
+        channel.SSHChannel.openFailed(self, reason)
 
     def channelOpen(self, _):
         req = self.conn.sendRequest(self, "exec", common.NS(self.command),
@@ -52,11 +73,12 @@ class CommandChannel(channel.SSHChannel):
         if dataType == 1:
             self.err = self.err + data
 
+    def request_exit_status(self, data):
+        self.exit = struct.unpack('>L', data)[0]
+
     def eofReceived(self):
-        if self.deferStdOut is not None:
-            self.deferStdOut.callback(self.out)
-        if self.deferStdErr is not None:
-            self.deferStdErr.callback(self.err)
+        if self.result is not None:
+            self.result.callback((self.exit, self.out, self.err))
 
 class TransportFactory(protocol.ClientFactory):
     def __init__(self, deferTransportReady):
@@ -77,9 +99,8 @@ def connect(host, username, password, port=22):
     reactor.connectTCP(host, port, TransportFactory(connection))
     return connection
 
-def sendCommand(connection, command, deferStdOut=None, deferStdErr=None):
-    channel = CommandChannel(command, deferStdOut, deferStdErr,
-                             conn=connection)
+def sendCommand(connection, command, result=None):
+    channel = CommandChannel(command, result, conn=connection)
     connection.openChannel(channel)
     return connection
 
@@ -87,5 +108,3 @@ def disconnect(connection):
     connection.transport.loseConnection()
 
     
-
-        

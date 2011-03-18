@@ -10,10 +10,16 @@ from twisted.cred import checkers, portal
 from twisted.conch.manhole_ssh import ConchFactory, TerminalRealm
 from twisted.conch.manhole_tap import chainedProtocolFactory
 
+from twisted.internet import ssl
+from twisted.web import server
+
+from prospector import web, const
+
 creds = {"admin": "p"}
 
 class Options(usage.Options):
-    optParameters = [["ssh", "s", 2222, "The port number for ssh shell."]]
+    optParameters = [["ssh", "s", 2222, "The port number for ssh shell."],
+                     ["web", "w", 8443, "The port number for the web."]]
 
 class ProspectorServiceMaker(object):
     implements(IServiceMaker, IPlugin)
@@ -35,6 +41,14 @@ class ProspectorServiceMaker(object):
         sshFactory = ConchFactory(sshPortal)
         sshService = strports.service(str(options["ssh"]), sshFactory)
         sshService.setServiceParent(svc)
+
+        site = server.Site(web.getRoot(), logPath=const.WEBLOG)
+        sslFactory = ssl.DefaultOpenSSLContextFactory(const.SSLKEY,
+                                                      const.SSLCERT)
+        sslServer = internet.SSLServer(int(options["web"]),
+                                       site,
+                                       sslFactory)
+        sslServer.setServiceParent(svc)
 
         return svc
 
