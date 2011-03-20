@@ -13,13 +13,14 @@ from twisted.conch.manhole_tap import chainedProtocolFactory
 from twisted.internet import ssl
 from twisted.web import server
 
-from prospector import web, const
+from prospector import web, settings
 
 creds = {"admin": "p"}
 
 class Options(usage.Options):
-    optParameters = [["ssh", "s", 2222, "The port number for ssh shell."],
-                     ["web", "w", 8443, "The port number for the web."]]
+    optParameters = [
+        ["file", "f", settings.DEFAULT_CONFIG_FILE,
+         "The config file to use [%s]." % settings.DEFAULT_CONFIG_FILE],]
 
 class ProspectorServiceMaker(object):
     implements(IServiceMaker, IPlugin)
@@ -28,6 +29,8 @@ class ProspectorServiceMaker(object):
     options = Options
 
     def makeService(self, options):
+        settings.loadConfig(options["file"])
+
         svc = service.MultiService()
 
         checker = checkers.InMemoryUsernamePasswordDatabaseDontUse(**creds)
@@ -39,16 +42,26 @@ class ProspectorServiceMaker(object):
 
         sshPortal = portal.Portal(sshRealm, [checker])
         sshFactory = ConchFactory(sshPortal)
-        sshService = strports.service(str(options["ssh"]), sshFactory)
+        sshService = strports.service(str(settings.config["ssh"]["port"]),
+                                      sshFactory)
         sshService.setServiceParent(svc)
 
-        site = server.Site(web.getRoot(), logPath=const.WEBLOG)
-        sslFactory = ssl.DefaultOpenSSLContextFactory(const.SSLKEY,
-                                                      const.SSLCERT)
-        sslServer = internet.SSLServer(int(options["web"]),
-                                       site,
-                                       sslFactory)
-        sslServer.setServiceParent(svc)
+        site = server.Site(web.getRoot(),
+                           logPath=settings.config["web"]["log"])
+
+        if int(settings.config["web"]["port"]) != 0:
+            siteService = strports.service(settings.config["web"]["port"],
+                                           site)
+            siteService.setServiceParent(svc)
+
+        if int(settings.config["web"]["sslport"]) != 0:
+            key = settings.config["web"]["key"]
+            cert = settings.config["web"]["cert"]
+            port = int(settings.config["web"]["sslport"])
+
+            sslFactory = ssl.DefaultOpenSSLContextFactory(key, cert)
+            sslServer = internet.SSLServer(port, site, sslFactory)
+            sslServer.setServiceParent(svc)
 
         return svc
 

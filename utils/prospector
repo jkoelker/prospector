@@ -7,6 +7,7 @@ TWISTD=/home/jkoelker/devenvs/prospector/bin/twistd
 MODULE=prospector
 PIDFILE=/home/jkoelker/devenvs/prospector/var/run/${MODULE}.pid
 LOGFILE=/home/jkoelker/devenvs/prospector/var/log/${MODULE}.log
+CONFIG=/home/jkoelker/devenvs/prospector/prospector.conf
 
 if [ "${1}" = 'start' ]; then
     RUNPID=`pgrep -f ${TWISTD} 2>/dev/null`
@@ -20,7 +21,7 @@ if [ "${1}" = 'start' ]; then
     if [ "${RUNPID}" -eq "${RECPID}" ]; then
         echo "${MODULE} is already running!"
     else
-        ${TWISTD} --pidfile=${PIDFILE} --logfile=${LOGFILE} ${MODULE}
+        ${TWISTD} --pidfile=${PIDFILE} --logfile=${LOGFILE} ${MODULE} -f ${CONFIG}
     fi
 elif [ "${1}" = 'stop' ]; then
     kill -s SIGTERM `cat ${PIDFILE} 2>/dev/null` 2>/dev/null
