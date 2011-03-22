@@ -37,6 +37,8 @@ function getscript {
 }
 
 function getmodules {
+    # Active is a single line separated with spaces of the scripts to run in
+    # order from the distro dir
     MODULES=$(wget -q -O - ${BASEURL}/${DISTRO}/active)
 }
 
@@ -51,5 +53,21 @@ function provision {
     done
 }
 
+function have_prog {
+    [ -x "$(which $1)" ]
+}
+
+function ensure_wget {
+    if have_prog wget; then echo "wget found"
+    elif have_prog yum; then yum install -y wget
+    elif have_prog apt-get; them apt-get install  -y wget
+    elif have_prog zypper; then zyper install -y wget
+    else
+        echo "Cannot install wget!"
+        exit 2
+    fi
+}
+
+ensure_wget
 provision
 
