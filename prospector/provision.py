@@ -22,9 +22,13 @@ def bootstrap(connection):
     def error(result):
         return False
     
-    baseUrl = "%s://%s:%s/config/" % (settings.getProto(),
-                                      settings.getHost(),
-                                      settings.getPort())
+    user = settings.config["web"]["user"]
+    sesame = settings.config["web"]["sesame"]
+
+    baseUrl = "%s://%s:%s@%s:%s/config" % (user,
+                                           sesame,
+                                           settings.getHost(),
+                                           settings.getPort())
 
     cmd = "wget -O /tmp/bootstrap.sh %s/bootstrap.sh && " % baseUrl + \
           "sh /tmp/bootstrap.sh %s" % baseUrl
