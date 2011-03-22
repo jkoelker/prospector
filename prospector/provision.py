@@ -25,7 +25,8 @@ def bootstrap(connection):
     user = settings.config["web"]["user"]
     sesame = settings.config["web"]["sesame"]
 
-    baseUrl = "%s://%s:%s@%s:%s/config" % (user,
+    baseUrl = "%s://%s:%s@%s:%s/config" % (settings.getProto(),
+                                           user,
                                            sesame,
                                            settings.getHost(),
                                            settings.getPort())
