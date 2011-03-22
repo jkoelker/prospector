@@ -2,8 +2,6 @@
 VERSION="0.1"
 
 BASEURL=$1
-USER=$2
-PASSWORD=$3
 
 TMPDIR=$(mktemp --tmpdir -d bootstrap.XXXXX)
 
@@ -16,7 +14,7 @@ function gotemp {
 }
 
 function runfile {
-    $(head -n 1 $1 | cut -d\! -f 2) $1
+    $(head -n 1 $1 | cut -d\! -f 2) $1 ${BASEURL}
 }
 
 function detect {
