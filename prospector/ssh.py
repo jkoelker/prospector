@@ -100,11 +100,16 @@ def connect(host, username, password, port=22):
     return connection
 
 def sendCommand(connection, command, result=None):
+    def done(result, executed):
+        executed.callback(connection)
+        return result
+
+    executed = defer.Deferred()
+    result.addCallback(done, executed)
     channel = CommandChannel(command, result, conn=connection)
     connection.openChannel(channel)
-    return connection
+    return executed
 
 def disconnect(connection):
     connection.transport.loseConnection()
 
-    
