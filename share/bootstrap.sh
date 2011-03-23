@@ -42,6 +42,7 @@ function getmodules {
 
 function provision {
     detect
+    getmodules
 
     for MOD in ${MODULES}
     do
