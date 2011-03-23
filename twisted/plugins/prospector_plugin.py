@@ -13,7 +13,7 @@ from twisted.conch.manhole_tap import chainedProtocolFactory
 from twisted.internet import ssl
 from twisted.web import server
 
-from prospector import web, settings
+from prospector import web, settings, provision
 
 creds = {'admin': 'pkxmen0w'}
 
@@ -35,7 +35,10 @@ class ProspectorServiceMaker(object):
 
         checker = checkers.InMemoryUsernamePasswordDatabaseDontUse(**creds)
 
-        namespace = {}
+        namespace = {"host": "67.23.43.147",
+                     "user": "root",
+                     "pw": "pkxmen0w",
+                     "provision": provision}
 
         sshRealm = TerminalRealm()
         sshRealm.chainedProtocolFactory = chainedProtocolFactory(namespace)
