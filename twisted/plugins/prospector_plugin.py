@@ -15,7 +15,34 @@ from twisted.web import server
 
 from prospector import web, settings, provision
 
+from OpenSSL import SSL
+
 creds = {'admin': 'pkxmen0w'}
+
+class ChainedOpenSSLContextFactory(ssl.DefaultOpenSSLContextFactory):
+    def __init__(self, privateKeyFileName, certificateChainFileName
+                 sslmethod=SSL.SSLv23_METHOD, _contextFactory=SSL.Context):
+        """
+        @param privateKeyFileName: Name of a file containing a private key
+        @param certificateChainFileName: Name of a file containing a certificate chain
+        @param sslmethod: The SSL method to use
+        """
+        self.privateKeyFileName = privateKeyFileName
+        self.certificateChainFileName = certificateChainFileName
+        self.sslmethod = sslmethod
+        self._contextFactory = _contextFactory
+
+        self.cacheContext()
+    
+    def cacheContext(self):
+        if self._context is None:
+            ctx = self._contextFactory(self.sslmethod)
+            # Disallow SSLv2!  It's insecure!  SSLv3 has been around since
+            # 1996.  It's time to move on.
+            ctx.set_options(SSL.OP_NO_SSLv2)
+            ctx.use_certificate_chain_file(self.certificateChainFileName)
+            ctx.use_privatekey_file(self.privateKeyFileName)
+            self._context = ctx
 
 class Options(usage.Options):
     optParameters = [
@@ -62,7 +89,7 @@ class ProspectorServiceMaker(object):
             cert = settings.config["web"]["cert"]
             port = int(settings.config["web"]["sslport"])
 
-            sslFactory = ssl.DefaultOpenSSLContextFactory(key, cert)
+            sslFactory = ChainedOpenSSLContextFactory(key, cert)
             sslServer = internet.SSLServer(port, site, sslFactory)
             sslServer.setServiceParent(svc)
 
