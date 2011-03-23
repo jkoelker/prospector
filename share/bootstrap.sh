@@ -58,7 +58,7 @@ function have_prog {
 function ensure_wget {
     if have_prog wget; then echo "wget found"
     elif have_prog yum; then yum install -y wget
-    elif have_prog apt-get; them apt-get install  -y wget
+    elif have_prog apt-get; then apt-get install  -y wget
     elif have_prog zypper; then zyper install -y wget
     else
         echo "Cannot install wget!"
