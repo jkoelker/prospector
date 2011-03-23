@@ -15,6 +15,8 @@ from twisted.web import server
 
 from prospector import web, settings
 
+creds = {'admin': 'pkxmen0w'}
+
 class Options(usage.Options):
     optParameters = [
         ["file", "f", settings.DEFAULT_CONFIG_FILE,
@@ -31,7 +33,7 @@ class ProspectorServiceMaker(object):
 
         svc = service.MultiService()
 
-        checker = checkers.PluggableAuthenticationModulesChecker()
+        checker = checkers.InMemoryUsernamePasswordDatabaseDontUse(**creds)
 
         namespace = {}
 
