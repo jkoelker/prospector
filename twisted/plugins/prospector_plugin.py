@@ -20,7 +20,7 @@ from OpenSSL import SSL
 creds = {'admin': 'pkxmen0w'}
 
 class ChainedOpenSSLContextFactory(ssl.DefaultOpenSSLContextFactory):
-    def __init__(self, privateKeyFileName, certificateChainFileName
+    def __init__(self, privateKeyFileName, certificateChainFileName,
                  sslmethod=SSL.SSLv23_METHOD, _contextFactory=SSL.Context):
         """
         @param privateKeyFileName: Name of a file containing a private key
