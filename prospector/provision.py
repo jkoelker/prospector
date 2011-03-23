@@ -11,6 +11,9 @@ def runCmd(connection, cmd):
 def bootstrap(connection):
     def success(result):
         ex, out, err = result
+
+        log.msg("\n\texit: %s\n\tout: %s \n\terr: %s" % (ex, out, err))
+
         if ex != 0:
             log.msg("ERROR:\n\texit: %s\n\tout: %s \n\terr: %s" % (ex,
                                                                    out,
@@ -20,6 +23,7 @@ def bootstrap(connection):
         return True
 
     def error(result):
+        log.msg("\n\t%s\n" % result)
         return False
     
     user = settings.config["web"]["user"]
