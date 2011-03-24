@@ -14,7 +14,7 @@ function gotemp {
 }
 
 function runfile {
-    $(head -n 1 $1 | cut -d\! -f 2) $1 ${BASEURL}/${DISTRO}
+    $(head -n 1 $1 | cut -d\! -f 2) $1 ${BASEURL} ${DISTRO}
 }
 
 function detect {

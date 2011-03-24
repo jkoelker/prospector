@@ -1,0 +1,1 @@
+../MineCraftServer/server.sh
