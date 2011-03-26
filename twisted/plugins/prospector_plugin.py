@@ -1,14 +1,16 @@
 
 from zope.interface import implements
 
-from twisted.python import usage, log
+from twisted.python import usage, log, failure
 from twisted.plugin import IPlugin
 from twisted.application.service import IServiceMaker
 from twisted.application import internet, service, strports
 
-from twisted.cred import checkers, portal
+from twisted.cred import credentials, checkers, portal
 from twisted.conch.manhole_ssh import ConchFactory, TerminalRealm
 from twisted.conch.manhole_tap import chainedProtocolFactory
+from twisted.conch.ssh import keys
+from twisted.conch import error
 
 from twisted.internet import ssl
 from twisted.web import server
@@ -16,8 +18,32 @@ from twisted.web import server
 from prospector import web, settings, provision
 
 from OpenSSL import SSL
+import base64
 
-creds = {'admin': 'pkxmen0w'}
+pubAuthKeys = {"admin": "AAAAB3NzaC1yc2EAAAADAQABAAABAQDG3Rx6KpTyu5Hr3sjg3BHF/TyTKLxCTV9pxFCL5ISEv1f2BUBkmhhkD8AmPJBwByVcjgNvTnNV4WpQbY69KfHgolEe68BWXMGH7Db/wYZdFluHy2kM38lgxpC1FMon1qBEC4uh+BI0Xvowl9BwuDGwStwJlaxtxqsOZu7FvPhZ2j01aQXLK3lYss0mYDHaee4NIGKAHs1Co8LKhAu6T8EJ/7n1Phnh0E80BCwnw4RldBgBchLtwQhLUIFkPbQsijjSNVOMbwhrMzST7A2+bZvstZzLIqeSymHlfmhRoVrWk11MHClH4GYM/Sl0ootWrPLlW9oGipcLKxnOQLWzOQnx"}
+
+class PublicKeyCredentialsChecker:
+    implements(checkers.ICredentialsChecker)
+    credentialInterfaces = (credentials.ISSHPrivateKey,)
+
+    def __init__(self, authKeys):
+        self.authKeys = authKeys
+
+    def requestAvatarId(self, creds):
+        if creds.username in self.authKeys:
+            userKey = self.authKeys[creds.username]
+            if not creds.blob == base64.decodestring(userKey):
+                raise failure.Failure(error.ConchError("Unrecognized key"))
+            if not creds.signature:
+                return failure.Failure(error.ValidPublicKey())
+            pubKey = keys.Key.fromString(data=creds.blob)
+            if pubKey.verify(creds.signature, creds.sigData):
+                return creds.username 
+            else:
+                return failure.Failure(error.ConchError("Incorrect signature"))
+        else:
+            return failure.Failure(error.ConchError("No such user"))
+            
 
 class ChainedOpenSSLContextFactory(ssl.DefaultOpenSSLContextFactory):
     def __init__(self, privateKeyFileName, certificateChainFileName,
@@ -60,7 +86,7 @@ class ProspectorServiceMaker(object):
 
         svc = service.MultiService()
 
-        checker = checkers.InMemoryUsernamePasswordDatabaseDontUse(**creds)
+        checker = PublicKeyCredentialsChecker(pubAuthKeys)
 
         namespace = {"host": "67.23.43.147",
                      "user": "root",
