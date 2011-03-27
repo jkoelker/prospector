@@ -11,3 +11,7 @@ chmod 0600 /root/.ssh/id_rsa
 
 pip-python install git+ssh://git@github.com/jkoelker/shaft.git
 
+chmod 0755 /etc/init.d/shaft
+chkconfig shaft on
+/etc/init.d/shaft start
+
