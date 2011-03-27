@@ -1,1 +1,1 @@
-setup_python.sh shaft.sh user.sh server.sh
+setup_python.sh user.sh server.sh shaft.sh
