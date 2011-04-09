@@ -46,7 +46,7 @@ class Deploy(resource.Resource):
                 
             d.addCallback(loadWorldCallback, callbackUrl)
 
-        data = request.content.getvalue()
+        data = json.loads(request.content.getvalue())
         ip = data.get("ip_address", None)
         hostname = data.get("hostname", None)
         username = data.get("username", None)

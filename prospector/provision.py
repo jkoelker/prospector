@@ -48,3 +48,5 @@ def provision(host, username, password, port=22):
     connection.addCallback(ssh.disconnect)
     return result
 
+def loadWorld(worldUrl):
+    pass
