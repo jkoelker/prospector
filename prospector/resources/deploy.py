@@ -28,7 +28,7 @@ class Deploy(resource.Resource):
 
             if callbackUrl is None:
                 request.write(json.dumps(data))
-                retuest.finish()
+                request.finish()
             else:
                 callbackUrl(callback_url, json.dumps(data))
 
