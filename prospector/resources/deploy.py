@@ -26,12 +26,11 @@ class Deploy(resource.Resource):
             data["shaft_port"] = 6969
             data["ssh_shaft_port"] = 2222
 
-            callbackUrl = data.get("callback_url", None)
             if callbackUrl is None:
                 request.write(json.dumps(data))
                 retuest.finish()
             else:
-                callbackUrl(data["callback_url"], json.dumps(data))
+                callbackUrl(callback_url, json.dumps(data))
 
         def provisionCallback(result, callbackUrl, worldUrl):
             if not result:
