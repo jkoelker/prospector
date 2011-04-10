@@ -18,7 +18,7 @@ def startMinecraft(ip):
 
 class Deploy(resource.Resource):
     def render_POST(self, request):
-        def done(result)
+        def done(result):
             data = {}
             data["result"] = True
             data["shaft_port"] = 6969
