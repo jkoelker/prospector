@@ -11,7 +11,7 @@ def callbackUrl(url, data):
     return d
 
 def startMinecraft(ip):
-    d = client.getPage("http://%s:6969/minecraft", method="POST",
+    d = client.getPage("http://%s:6969/minecraft" % ip, method="POST",
                        postdata={"action": "start"},
                        followRedirect=True)
     return d
