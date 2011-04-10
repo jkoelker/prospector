@@ -10,10 +10,27 @@ def callbackUrl(url, data):
                        followRedirect=True)
     return d
 
+def startMinecraft(ip):
+    d = client.getPage("http://%s:6969/minecraft", method="POST",
+                       postdata={"action": "start"},
+                       followRedirect=True)
+    return d
+
 class Deploy(resource.Resource):
     def render_POST(self, request):
-        def loadWorldCallback(result, callbackUrl):
+        def done(result)
             data = {}
+            data["result"] = True
+            data["shaft_port"] = 6969
+            data["ssh_shaft_port"] = 2222
+
+            if callbackUrl is None:
+                request.write(json.dumps(data))
+                request.finish()
+            else:
+                callbackUrl(callbackUrl, json.dumps(data))
+
+        def loadWorldCallback(result, callbackUrl, ip):
             if not result:
                 if callbackUrl is None:
                     request.write(json.dumps({"result": False}))
@@ -23,17 +40,10 @@ class Deploy(resource.Resource):
                     callbackUrl(callbackUrl, json.dumps({"result": false}))
                     return False
 
-            data["result"] = True
-            data["shaft_port"] = 6969
-            data["ssh_shaft_port"] = 2222
+            d = startMinecraft(ip)
+            d.addCallback(done, callbackUrl)
 
-            if callbackUrl is None:
-                request.write(json.dumps(data))
-                request.finish()
-            else:
-                callbackUrl(callback_url, json.dumps(data))
-
-        def provisionCallback(result, callbackUrl, worldUrl):
+        def provisionCallback(result, callbackUrl, worldUrl, ip):
             if not result:
                 if callbackUrl is None:
                     request.write(json.dumps({"result": False}))
@@ -49,7 +59,7 @@ class Deploy(resource.Resource):
                 d = defer.Deferred()
                 d.callback(True)
                 
-            d.addCallback(loadWorldCallback, callbackUrl)
+            d.addCallback(loadWorldCallback, callbackUrl, ip)
 
         data = json.loads(request.content.getvalue())
         ip = data.get("ip_address", None)
@@ -67,7 +77,7 @@ class Deploy(resource.Resource):
 
 
         d = provision.provision(ip, username, password)
-        d.addCallback(provisionCallback, callbackUrl, worldUrl)
+        d.addCallback(provisionCallback, callbackUrl, worldUrl, ip)
 
         if callbackUrl is None:
             return server.NOT_DONE_YET
