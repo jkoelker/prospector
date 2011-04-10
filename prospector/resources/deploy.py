@@ -10,17 +10,18 @@ def callbackUrl(url, data):
                        followRedirect=True)
     return d
 
-def fail(data):
-    data["result"] = False
-    callbackUrl(data["callback_url"], json.dumps(data))
-
 class Deploy(resource.Resource):
     def render_POST(self, request):
         def loadWorldCallback(result, callbackUrl):
             data = {}
             if not result:
-                fail(data)
-                return False
+                if callbackUrl is None:
+                    request.write(json.dumps({"result": False}))
+                    request.finish()
+                    return False
+                else:
+                    callbackUrl(callbackUrl, json.dumps({"result": false}))
+                    return False
 
             data["result"] = True
             data["shaft_port"] = 6969
@@ -34,8 +35,13 @@ class Deploy(resource.Resource):
 
         def provisionCallback(result, callbackUrl, worldUrl):
             if not result:
-                fail(data)
-                return False
+                if callbackUrl is None:
+                    request.write(json.dumps({"result": False}))
+                    request.finish()
+                    return False
+                else:
+                    callbackUrl(callbackUrl, json.dumps({"result": false}))
+                    return False
 
             if worldUrl is not None:
                 d = provison.loadWorld(worldUrl)
